@@ -1,4 +1,20 @@
-# GraalVM Python Runner
+# Docling in Java - GraalVM Polyglot Project
+
+A multi-step project demonstrating how to use Python libraries (including Docling) from Java using GraalVM's polyglot capabilities.
+
+## Project Structure
+
+This repository contains three steps:
+
+1. **Step 1 (Root)**: Basic Hello World - Running simple Python code from Java
+2. **Step 2**: Simple Python Library - Using basic Python libraries (math, datetime, etc.)
+3. **Step 3**: Docling Library - Using the complex Docling Python library
+
+Each step builds upon the previous one, showing progressively more complex integration patterns.
+
+---
+
+# Step 1: Basic Hello World
 
 A simple Maven project that demonstrates running Python code from Java using GraalVM's polyglot capabilities.
 
