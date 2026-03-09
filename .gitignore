@@ -32,3 +32,8 @@ Thumbs.db
 
 # Log files
 *.log
+
+# GraalPy-generated Python resources (Docling, qrcode, etc.)
+step2-simple-library/python-resources/
+step3-docling-library/python-resources/
+
