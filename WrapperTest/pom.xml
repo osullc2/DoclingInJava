@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>docling-java</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <graalpy.version>24.1.0</graalpy.version>
+  </properties>
+
+  <dependencies>
+    <!-- GraalVM Polyglot API -->
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>polyglot</artifactId>
+      <version>${graalpy.version}</version>
+    </dependency>
+
+    <!-- GraalPy language runtime -->
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>python</artifactId>
+      <version>${graalpy.version}</version>
+      <type>pom</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- GraalPy plugin: downloads GraalPy, creates venv, installs docling -->
+      <plugin>
+        <groupId>org.graalvm.python</groupId>
+        <artifactId>graalpy-maven-plugin</artifactId>
+        <version>${graalpy.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process-graalpy-resources</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <packages>
+            <package>docling</package>
+          </packages>
+        </configuration>
+      </plugin>
+
+      <!-- Compiler plugin (explicit for Java 21) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <source>21</source>
+          <target>21</target>
+        </configuration>
+      </plugin>
+
+      <!-- Exec plugin: lets you run via mvn exec:java -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <mainClass>com.example.DoclingWrapper</mainClass>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
