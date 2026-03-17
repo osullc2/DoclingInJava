@@ -1,0 +1,63 @@
+plugins {
+    id "application"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(platform("org.graalvm.polyglot:python:25.0.2"))
+    implementation("org.graalvm.python:python-embedding:25.0.2")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+application {
+    mainClass = "com.example.docling.App"
+}
+
+def isWindows = System.getProperty("os.name").toLowerCase().contains("win")
+def graalpyExe = file("${System.getenv("JAVA_HOME")}/bin/" + (isWindows ? "graalpy.exe" : "graalpy"))
+def venvDir = file("${projectDir}/python-resources/venv")
+def venvGraalpyExe = file("${venvDir}/" + (isWindows ? "Scripts/graalpy.exe" : "bin/graalpy"))
+
+tasks.register("ensureGraalpyAvailable") {
+    doLast {
+        if (!graalpyExe.exists()) {
+            throw new GradleException(
+                "Could not find GraalPy at ${graalpyExe}.\n" +
+                "Set JAVA_HOME to a GraalVM JDK that includes GraalPy (graalpy/graalpy.exe)."
+            )
+        }
+    }
+}
+
+tasks.register("ensureVenvPip", Exec) {
+    dependsOn("ensureGraalpyAvailable")
+    doFirst {
+        venvDir.parentFile.mkdirs()
+    }
+    commandLine(graalpyExe.absolutePath, "-m", "venv", venvDir.absolutePath, "--without-pip")
+}
+
+tasks.register("installPipInVenv", Exec) {
+    dependsOn("ensureVenvPip")
+    commandLine(venvGraalpyExe.absolutePath, "-m", "ensurepip")
+}
+
+// Install docling without dependencies to avoid native builds (numpy, etc.)
+tasks.register("installDoclingNoDeps", Exec) {
+    dependsOn("installPipInVenv")
+    commandLine(venvGraalpyExe.absolutePath, "-m", "pip", "install", "--no-deps", "docling")
+}
+
+tasks.named("run") {
+    dependsOn("installDoclingNoDeps")
+    environment("DOCLING_VENV", venvDir.absolutePath)
+}
+
