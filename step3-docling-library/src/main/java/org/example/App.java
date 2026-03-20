@@ -12,15 +12,8 @@ public class App {
         }
 
         try (var context = GraalPy.createPythonContext(path)) {
-            // Step 2: verify a simple Docling method usage.
-            // We import DocumentConverter, construct it, and return a short status string.
-            String script = """
-                    from docling.document_converter import DocumentConverter
-                    converter = DocumentConverter()
-                    result = f"Docling DocumentConverter created: {converter.__class__.__name__}"
-                    """;
-
-            var value = context.eval("python", script + "\nresult");
+            // Step 1: only verify that Docling can be imported – no methods used yet.
+            var value = context.eval("python", "import docling; 'Docling imported OK'");
             System.out.println(value.asString());
         }
     }
