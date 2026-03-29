@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.graalvm.python' version '25.0.1'
+}
+
+group = 'com.example'
+version = '0.0.1'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'com.example.DoclingDemo'
+}
+
+graalPy {
+    externalDirectory = file("${rootDir}/python-resources")
+    packages = ['docling-core']
+}
+
+tasks.named('run') {
+    jvmArgs = [
+        '--enable-native-access=ALL-UNNAMED',
+        '--sun-misc-unsafe-memory-access=allow',
+        '-Xss16M'
+    ]
+}

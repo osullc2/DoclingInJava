@@ -141,3 +141,71 @@ Where docling-parse stands:
   This is the core open question: "docling-parse doesn't have a prebuilt GraalPy
   wheel yet, and may or may not compile from source."
 
+
+PART 4: OUR APPROACH
+---------------------
+
+Given the above, we decided on a staged approach designed to isolate exactly
+where things succeed or fail.
+
+DECISION: External directory deployment instead of embedded VFS
+  Rather than bundling the Python venv inside the JAR (the default VFS mode),
+  we use an external directory on disk:
+
+    graalPy {
+        externalDirectory = file("${rootDir}/python-resources")
+        packages = ['docling-core']
+    }
+
+  This is more reliable on Windows for packages with native components, because
+  it means pip installs into a real folder that the OS and compiler tools can
+  access normally, rather than into an abstracted virtual filesystem.
+
+STAGE 1: Pure Python smoke test with docling-core
+  docling-core is the pure-Python schema and data model layer of the Docling
+  project. It has no C/C++ extensions itself. Installing it first verifies that:
+    - The GraalPy Gradle plugin resolves and runs correctly
+    - The external directory venv is created and populated
+    - The GraalPy Context can be created from Java
+    - Python import machinery works end to end
+  If this fails, the problem is infrastructure, not Docling-specific.
+
+  Target import for smoke test:
+    from docling_core.types.doc import DoclingDocument
+
+STAGE 2: Full docling install (pending Stage 1 success)
+  Once Stage 1 passes, swap the package to "docling" and update the import to:
+    from docling.document_converter import DocumentConverter
+
+  This is where docling-parse enters the picture. The build will attempt to
+  either find a compatible wheel or compile docling-parse from source using
+  MSVC on Windows. The outcome of this step is the answer to our open question.
+
+CURRENT STATUS
+--------------
+Stage 1 (docling-core smoke test) is in progress. We hit a build error during
+the graalPyInstallPackages task where GraalPy's pip attempted to compile numpy
+from source (a transitive dependency of docling-core) and failed to reach
+raw.githubusercontent.com and pypi.org to download build dependencies. This
+appears to be a network connectivity issue (DNS resolution failures suggesting
+a proxy or firewall on the network) rather than a fundamental GraalPy or
+Docling incompatibility.
+
+The numpy compilation was triggered because docling-core pulls in numpy as a
+dependency, numpy has no prebuilt GraalPy wheel for Windows x86_64 on the
+standard index, and the LAFO mirror (which does have a numpy wheel) was not
+configured in our build file. Adding the LAFO mirror as an extra index URL
+-- matching what the Spring Boot demo does -- is the next step once the network
+issue is resolved.
+
+OPEN QUESTIONS
+--------------
+1. Can docling-parse compile from source under GraalPy on Windows x86_64?
+2. If not, what is the path to producing a GraalPy-compatible wheel for it?
+3. Is the build failure network-related (proxy/firewall) or a deeper issue
+   with GraalPy's pip on Windows?
+
+
+
+
+
