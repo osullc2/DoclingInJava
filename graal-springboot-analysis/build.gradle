@@ -22,8 +22,12 @@ application {
 
 graalPy {
     externalDirectory = file("${rootDir}/python-resources")
-    packages = ['docling-core']
+    packages = [
+        '--extra-index-url=https://lafo.ssw.uni-linz.ac.at/pub/demowheels/simple/',
+        'docling-core'
+    ]
 }
+
 
 tasks.named('run') {
     jvmArgs = [
