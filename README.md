@@ -7,6 +7,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
 - [Repository map](#repository-map)
 - [Project catalog](#project-catalog)
   - [1. Root Maven module (Step 1)](#1-root-maven-module-step-1)
+  - [2. `step2-simple-library`](#2-step2-simple-library)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -50,6 +51,28 @@ java com.example.PythonRunner
 - **POM version vs installed GraalVM:** Mismatch causes confusing resolution or runtime errors.
 
 **Status.** **Complete** for hello-world polyglot. Does **not** exercise PyPI, Docling, or the GraalPy Maven/Gradle plugins.
+
+### 2. `step2-simple-library`
+
+**Purpose.** Demonstrate the **official GraalPy-on-Java** pattern with a real PyPI package: **`qrcode==7.4.2`**, installed by **`graalpy-maven-plugin`** into `python-resources/`, then called from Java (with a small Swing UI). This is the first subproject that uses **managed Python resources** instead of only the bare polyglot engine.
+
+**Key files.** `step2-simple-library/pom.xml` (GraalPy 25.0.2 meta POM + `python-embedding` + plugin); Java under `step2-simple-library/src/main/java/org/example/` (`App`, `GraalPy`, `QRCode`, etc.—see that folder’s README).
+
+**How to run (summary).**
+
+```bash
+mvn -f step2-simple-library/pom.xml compile
+mvn -f step2-simple-library/pom.xml exec:java -Dexec.mainClass=org.example.App -Dgraalpy.resources=./step2-simple-library/python-resources
+```
+
+**Difficulties and blockers.**
+
+- **Generated `python-resources/` is gitignored** (see root `.gitignore`): a fresh clone must run a Maven phase that triggers `process-graalpy-resources` before the app can start.
+- **`-Dgraalpy.resources` path:** Must point at the directory the plugin populated; wrong or relative-path mistakes show up as import errors in Python.
+- **First-time pip downloads:** Needs network access to PyPI during the GraalPy plugin run.
+- **Swing / desktop:** Headless CI cannot display the window without an X server or equivalent (local dev expectation).
+
+**Status.** **Working** as a teaching step for “PyPI + GraalPy Maven plugin + external resources directory.” Not related to Docling.
 
 ---
 
