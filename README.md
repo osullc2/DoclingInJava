@@ -8,6 +8,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
 - [Project catalog](#project-catalog)
   - [1. Root Maven module (Step 1)](#1-root-maven-module-step-1)
   - [2. `step2-simple-library`](#2-step2-simple-library)
+  - [3. `step3-docling-library`](#3-step3-docling-library)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -73,6 +74,30 @@ mvn -f step2-simple-library/pom.xml exec:java -Dexec.mainClass=org.example.App -
 - **Swing / desktop:** Headless CI cannot display the window without an X server or equivalent (local dev expectation).
 
 **Status.** **Working** as a teaching step for “PyPI + GraalPy Maven plugin + external resources directory.” Not related to Docling.
+
+### 3. `step3-docling-library`
+
+**Purpose.** Use the same **GraalPy Maven plugin + external `python-resources/`** pattern as Step 2, but install the **`docling`** PyPI package (full install with dependencies, not `--no-deps`). Java code verifies that **`import docling`** succeeds via `GraalPyResources.contextBuilder(Path)`—the intended “Step 3” on the path to document conversion.
+
+**Key files.** `step3-docling-library/pom.xml` (GraalPy **25.0.2**, `graalpy-maven-plugin` with `<package>docling</package>`); `org.example.GraalPy` and `org.example.App` under `src/main/java/`.
+
+**How to run (summary).**
+
+```bash
+mvn -f step3-docling-library/pom.xml compile
+mvn -f step3-docling-library/pom.xml exec:java -Dexec.mainClass=org.example.App -Dgraalpy.resources=./step3-docling-library/python-resources
+```
+
+**Difficulties and blockers.**
+
+- **Heavy dependency graph:** Full `docling` pulls native-heavy stacks (e.g. **`docling-parse`**) and large transitive deps. Builds can be **slow**, require **strong network** access to PyPI (and sometimes source/patch URLs), and may try to **compile** wheels where no GraalPy-compatible prebuilt wheel exists.
+- **Windows + GraalPy wheels:** Unlike CPython, GraalPy needs **GraalPy-built** wheels for many extensions; missing wheels trigger local compiles or failures. The LAFO mirror used in other demos may be required for packages like **NumPy** on some platforms—this POM does not yet add that mirror by default.
+- **`python-resources/` is gitignored:** Fresh clones must run a build that executes `process-graalpy-resources` before runtime.
+- **README drift:** The folder `README.md` still reads like a placeholder in places; the code and POM have moved ahead to a real import smoke test—documentation there should be aligned.
+
+**Status.** **Partially complete.** Import-only smoke test is implemented; **end-to-end conversion** (e.g. `DocumentConverter` on a sample PDF), **tutorial polish**, and **reliable reproducible installs** (mirrors, pinned versions, documented disk/time) are still open.
+
+**Next steps.** Add **`--extra-index-url`** / LAFO-style configuration if Windows builds keep compiling NumPy from source; add a **minimal conversion example** and expected output; update `step3-docling-library/README.md` to match current behavior; consider pinning versions to match a known-good GraalPy wheel set.
 
 ---
 
