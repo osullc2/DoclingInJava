@@ -1,22 +1,61 @@
-# Docling in Java - GraalVM Polyglot Project
+# Docling in Java — GraalVM / GraalPy Sandbox
 
-A multi-step project demonstrating how to use Python libraries (including Docling) from Java using GraalVM's polyglot capabilities.
+This repository collects **Maven** and **Gradle** experiments for calling **Python from Java** with **GraalVM / GraalPy**, oriented toward eventually running **IBM Docling** for document conversion. The [Project catalog](#project-catalog) below describes **each subproject**, what it proves, difficulties encountered, and next steps where work is incomplete.
 
-## Project Structure
+## Table of contents
 
-This repository contains three steps:
+- [Repository map](#repository-map)
+- [Project catalog](#project-catalog)
+  - [1. Root Maven module (Step 1)](#1-root-maven-module-step-1)
+- [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
-1. **Step 1 (Root)**: Basic Hello World - Running simple Python code from Java
-2. **Step 2**: Simple Python Library - Using basic Python libraries (math, datetime, etc.)
-3. **Step 3**: Docling Library - Using the complex Docling Python library
+## Repository map
 
-Each step builds upon the previous one, showing progressively more complex integration patterns.
+| Location | Build tool | Role |
+|----------|------------|------|
+| Repository root (`pom.xml`, `src/`) | Maven | Minimal polyglot “Hello World” (Step 1). |
+| `step2-simple-library/` | Maven + `graalpy-maven-plugin` | GraalPy + PyPI (`qrcode`) embedding example. |
+| `step3-docling-library/` | Maven + `graalpy-maven-plugin` | Docling install + import smoke test (GraalPy 25.x style). |
+| `gradle-docling-test/` | Gradle | External GraalPy venv; Docling smoke / optional conversion harness. |
+| `graal-springboot-analysis/` | Gradle + `org.graalvm.python` | Research notes + `DoclingDemo` using `python-resources`. |
+| `WrapperTest/` | Maven + GraalPy plugin | `DoclingWrapper` pointed at a host venv path. |
+| `target/` | Maven output | Build directory for the **root** module only (gitignored). |
+
+## Project catalog
+
+### 1. Root Maven module (Step 1)
+
+**Purpose.** Show that a standard Maven Java app can open a GraalVM polyglot `Context`, enable Python, and run `print('Hello World')` without any extra Python packages.
+
+**Layout.** Root `pom.xml` (artifact `graalvm-python`); sources under `src/main/java/com/example/` (`PythonRunner`).
+
+**How to run.**
+
+```bash
+mvn clean compile
+mvn dependency:copy-dependencies
+# Windows PowerShell:
+$env:CLASSPATH="target\classes;target\dependency\*"
+java com.example.PythonRunner
+```
+
+**Dependencies / versions.** The root POM pins **GraalVM 23.1.0** artifacts (`graal-sdk`, `polyglot`, `python-language`, `python-resources`). Sibling folders use **24.x / 25.x** coordinates; a short version matrix appears under **Final notes** near the end of this README.
+
+**Difficulties and blockers.**
+
+- **`mvn exec:java`:** Documented below as **unreliable** in this setup; prefer `dependency:copy-dependencies` plus explicit `java` with `CLASSPATH`.
+- **Wrong Maven coordinates:** `org.graalvm.polyglot:python` is not the same as pulling full GraalPy support; this module needs `org.graalvm.python:python-language` and `python-resources`.
+- **“No language implementation found”:** Appears if Python language JARs are missing or versions disagree with the runtime JDK.
+- **Windows paths with spaces (e.g. OneDrive):** `InvalidPathException` or engine init failures when paths are rewritten oddly; explicit classpath and stable working directories help.
+- **POM version vs installed GraalVM:** Mismatch causes confusing resolution or runtime errors.
+
+**Status.** **Complete** for hello-world polyglot. Does **not** exercise PyPI, Docling, or the GraalPy Maven/Gradle plugins.
 
 ---
 
-# Step 1: Basic Hello World
+## Appendix: Step 1 setup tutorial (hands-on)
 
-A simple Maven project that demonstrates running Python code from Java using GraalVM's polyglot capabilities.
+Step-by-command walkthrough for the root Maven module (requirements, `pom.xml`, `PythonRunner`, classpath run, and troubleshooting).
 
 ## Requirements
 
