@@ -12,6 +12,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
   - [4. `gradle-docling-test`](#4-gradle-docling-test)
   - [5. `graal-springboot-analysis`](#5-graal-springboot-analysis)
   - [6. `WrapperTest`](#6-wrappertarget)
+- [Final notes](#final-notes)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -44,7 +45,7 @@ $env:CLASSPATH="target\classes;target\dependency\*"
 java com.example.PythonRunner
 ```
 
-**Dependencies / versions.** The root POM pins **GraalVM 23.1.0** artifacts (`graal-sdk`, `polyglot`, `python-language`, `python-resources`). Sibling folders use **24.x / 25.x** coordinates; a short version matrix appears under **Final notes** near the end of this README.
+**Dependencies / versions.** The root POM pins **GraalVM 23.1.0** artifacts (`graal-sdk`, `polyglot`, `python-language`, `python-resources`). Sibling folders use **24.x / 25.x** coordinates; see the [version matrix](#final-notes) in **Final notes**.
 
 **Difficulties and blockers.**
 
@@ -160,6 +161,25 @@ cd gradle-docling-test
 **Status.** **Illustrative / manual** — useful as a reference for **`python.Executable`** wiring; **not** validated as a turnkey submodule without user-supplied venv.
 
 **Next steps.** Align **GraalVM artifact versions** with the rest of the repo or mark explicitly as legacy; document **exact steps** to create the venv (`graalpy -m venv`, `pip install docling`, etc.); optionally point `main` at **`step3-docling-library/python-resources`** after a successful plugin build for an integrated story.
+
+## Final notes
+
+**Why so many subprojects.** Each folder isolates one integration style: **bare polyglot** (root), **Maven GraalPy plugin + `python-resources/`** (Steps 2–3), **Gradle + manual venv** (`gradle-docling-test`), **Gradle GraalPy plugin + research write-up** (`graal-springboot-analysis`), and **polyglot `python.Executable` to a host venv** (`WrapperTest`). That makes comparisons fair but duplicates some concepts—pick one path for new application code.
+
+**GraalVM / GraalPy version matrix (approximate).**
+
+| Area | GraalPy / polyglot line | Notes |
+|------|-------------------------|--------|
+| Root `pom.xml` | **23.1.0** (`python-language` + `python-resources`) | Older coordinates; align with your installed JDK when possible. |
+| `WrapperTest` | **24.1.0** | Older than the 25.x experiments. |
+| `step2-simple-library`, `step3-docling-library`, `gradle-docling-test` | **25.0.2** (Maven meta POM / `python-embedding`) | Current “family” for new GraalPy-on-Java work in this repo. |
+| `graal-springboot-analysis` | **25.0.1** (`org.graalvm.python` Gradle plugin) | Matches upstream demo era; check plugin release notes before bumping. |
+
+**Docling-specific risk.** Full **Docling** depends on native-heavy pieces (notably **`docling-parse`**). GraalPy is **not** CPython-binary compatible: wheels must be **GraalPy-built** or built from source under GraalPy. Official GraalPy wheel lists and mirrors such as **LAFO** (used in reference demos and optionally here) are often required on **Windows** so **NumPy** and friends do not compile from source on every clone.
+
+**Repository hygiene.** Root **`target/`** and generated **`step2-simple-library/python-resources/`**, **`step3-docling-library/python-resources/`** are listed in `.gitignore`. Gradle build dirs under `graal-springboot-analysis/` should stay untracked—do not commit local venvs or wheels.
+
+**Suggested direction for “done”.** Pick **one** packaging story (Maven plugin vs Gradle plugin vs external venv), add **one** reproducible Docling install recipe (mirrors + pins), ship **one** conversion sample (local PDF + URL), and fold the others into “archived experiments” or clearly labeled alternatives.
 
 ---
 
