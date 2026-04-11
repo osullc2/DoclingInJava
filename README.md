@@ -10,6 +10,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
   - [2. `step2-simple-library`](#2-step2-simple-library)
   - [3. `step3-docling-library`](#3-step3-docling-library)
   - [4. `gradle-docling-test`](#4-gradle-docling-test)
+  - [5. `graal-springboot-analysis`](#5-graal-springboot-analysis)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -123,6 +124,23 @@ cd gradle-docling-test
 **Status.** **Partially complete** as a **Gradle + external venv + polyglot options** harness; **reliable conversion** on Windows without a curated wheel/index strategy is still open.
 
 **Next steps.** Decide on **full install vs minimal curated deps**; add LAFO / GraalPy wheel index if needed; document expected JSON output fields and a **known-good sample PDF**; consider a small CI recipe (or document why CI is skipped).
+
+### 5. `graal-springboot-analysis`
+
+**Purpose.** Two things live here: (1) **`README.md`** — long-form **research notes** comparing Fabio Niephaus’s **Spring Boot** and **Quarkus** GraalPy demos, how **`org.graalvm.python` Gradle** bundles a venv into a VFS, why **Docling** is harder than **MarkItDown** (notably **`docling-parse`** and GraalPy wheel availability), and a **staged plan** (e.g. `docling-core` smoke vs full `docling`). (2) A **Gradle `application`** — `DoclingDemo` loads **`GraalPyContextManager`** (`GraalPyResources.contextBuilder` over **`python-resources`**), uses **`DocumentConverter`** Java glue to call Python **`DocumentConverter.convert`** and print the first ~500 characters of Markdown from a sample URL (e.g. an arXiv PDF).
+
+**Build.** `build.gradle` uses **`org.graalvm.python` 25.0.1**, **`graalPy { externalDirectory ... packages = [...] }`**, JVM args for native access / stack, and may reference a **LAFO extra index** for GraalPy wheels (see the folder README and `build.gradle` for the exact package list).
+
+**Difficulties and blockers.**
+
+- **Name vs contents:** The directory name suggests “Spring Boot,” but the demo is **not** a Spring application—it is a small **Java `main`** plus research notes.
+- **Package list vs Python imports:** The Gradle file has targeted **`docling-core`** for staged installs, while **`DocumentConverter.java`** imports **`from docling.document_converter import DocumentConverter`** (the **full Docling** API). Those need to stay **aligned**: either install the **`docling`** meta-package and dependencies, or change Python to use **`docling_core`**-only APIs for a true “core-only” stage.
+- **Wheels and network:** Folder notes describe **`graalPyInstallPackages`** failing when **NumPy** tried to **compile from source** and could not reach **PyPI / raw GitHub** (proxy/firewall). Adding the **LAFO mirror** (as in the upstream Spring demo) is the documented mitigation when standard indexes lack a Windows GraalPy wheel.
+- **`docling-parse`:** No GraalPy prebuilt wheel on the usual indexes; **compatibility with GraalPy** remains an open research question.
+
+**Status.** **Research + prototype:** documentation is rich; the runnable demo depends on a **successful venv populate** and consistent **`docling` vs `docling-core`** wiring.
+
+**Next steps.** Reconcile **Gradle package pins** with **Python import paths**; ensure **LAFO / extra index** is set whenever NumPy-style deps would otherwise compile; re-run the **staged plan** (core import → full Docling) and record **Windows vs Linux** outcomes; optionally rename the folder or add a one-line clarification in its README to avoid “Spring Boot” confusion.
 
 ---
 
