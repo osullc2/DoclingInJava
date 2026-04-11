@@ -9,6 +9,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
   - [1. Root Maven module (Step 1)](#1-root-maven-module-step-1)
   - [2. `step2-simple-library`](#2-step2-simple-library)
   - [3. `step3-docling-library`](#3-step3-docling-library)
+  - [4. `gradle-docling-test`](#4-gradle-docling-test)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -98,6 +99,30 @@ mvn -f step3-docling-library/pom.xml exec:java -Dexec.mainClass=org.example.App 
 **Status.** **Partially complete.** Import-only smoke test is implemented; **end-to-end conversion** (e.g. `DocumentConverter` on a sample PDF), **tutorial polish**, and **reliable reproducible installs** (mirrors, pinned versions, documented disk/time) are still open.
 
 **Next steps.** Add **`--extra-index-url`** / LAFO-style configuration if Windows builds keep compiling NumPy from source; add a **minimal conversion example** and expected output; update `step3-docling-library/README.md` to match current behavior; consider pinning versions to match a known-good GraalPy wheel set.
+
+### 4. `gradle-docling-test`
+
+**Purpose.** A **Gradle** counterpoint to the Maven plugin flow: create a **real GraalPy venv** under `python-resources/venv` using `graalpy -m venv`, run **`pip install --no-deps docling`**, then run Java with **`python-embedding` 25.0.2**. The `run` task sets **`DOCLING_VENV`** so `com.example.docling.App` can point polyglot **`python.Executable`** at `venv\Scripts\graalpy.exe` (Windows) or `venv/bin/graalpy`. `App.java` runs a JSON-style smoke script: import `docling`, construct **`DocumentConverter`**, and optionally **`--input`** a file for markdown/text previews.
+
+**How to run.**
+
+```powershell
+cd gradle-docling-test
+.\gradlew run
+# Optional: .\gradlew run --args="--input C:\path\to\file.pdf --mode both"
+```
+
+**Requirements.** `JAVA_HOME` must be a **GraalVM JDK** that ships **`graalpy`** next to `java` (the build checks this).
+
+**Difficulties and blockers.**
+
+- **`--no-deps` tradeoff:** Avoids pulling NumPy/toolchains during install but yields an **incomplete** environment; **imports may succeed** while **`convert()` fails** at runtime depending on what Docling actually needs loaded.
+- **Platform variance:** Windows vs Unix paths for the venv executable must stay consistent (`Scripts` vs `bin`).
+- **Full Docling closure:** Moving from “loadable” to “convert real documents” likely requires **either** removing `--no-deps` and solving native wheels **or** curating explicit extra packages—same GraalPy wheel story as Step 3.
+
+**Status.** **Partially complete** as a **Gradle + external venv + polyglot options** harness; **reliable conversion** on Windows without a curated wheel/index strategy is still open.
+
+**Next steps.** Decide on **full install vs minimal curated deps**; add LAFO / GraalPy wheel index if needed; document expected JSON output fields and a **known-good sample PDF**; consider a small CI recipe (or document why CI is skipped).
 
 ---
 
