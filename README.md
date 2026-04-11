@@ -11,6 +11,7 @@ This repository collects **Maven** and **Gradle** experiments for calling **Pyth
   - [3. `step3-docling-library`](#3-step3-docling-library)
   - [4. `gradle-docling-test`](#4-gradle-docling-test)
   - [5. `graal-springboot-analysis`](#5-graal-springboot-analysis)
+  - [6. `WrapperTest`](#6-wrappertarget)
 - [Appendix: Step 1 setup tutorial](#appendix-step-1-setup-tutorial-hands-on)
 
 ## Repository map
@@ -141,6 +142,24 @@ cd gradle-docling-test
 **Status.** **Research + prototype:** documentation is rich; the runnable demo depends on a **successful venv populate** and consistent **`docling` vs `docling-core`** wiring.
 
 **Next steps.** Reconcile **Gradle package pins** with **Python import paths**; ensure **LAFO / extra index** is set whenever NumPy-style deps would otherwise compile; re-run the **staged plan** (core import → full Docling) and record **Windows vs Linux** outcomes; optionally rename the folder or add a one-line clarification in its README to avoid “Spring Boot” confusion.
+
+### 6. `WrapperTest`
+
+**Purpose.** A **Maven** project (`docling-java`) that shows a third embedding style: **do not** rely on `GraalPyResources` paths from the Maven plugin for the demo `main`; instead, construct a polyglot **`Context`** with **`python.Executable`** pointing at a **host-created venv** (`.../bin/graalpy` or `Scripts\graalpy.exe`) and **`python.ForceImportSite=true`**. `DoclingWrapper` evaluates Python once to import **`DocumentConverter`** and exposes **`convertToMarkdown` / `convertToText`** to Java.
+
+**Versions.** POM uses **GraalPy / polyglot 24.1.0** — older than the **25.0.x** line used in `step2`, `step3`, and `gradle-docling-test`.
+
+**How it is meant to be used.** You provide a venv that already contains a working **Docling** install (full stack); the Java code wires the interpreter to that prefix.
+
+**Difficulties and blockers.**
+
+- **Placeholder `main`:** `DoclingWrapper.main` uses **`Path.of(".venv")`** as a sample—must be replaced with a **real venv path** that contains Docling; there is no automated check that the venv is complete.
+- **Version skew:** **24.1.0** here vs **25.0.x** elsewhere can confuse debugging (different artifacts, different wheel behavior).
+- **Duplication:** Overlaps conceptually with **`gradle-docling-test`** and Step 3 but uses **manual** venv selection instead of plugin-managed `python-resources/` (by default).
+
+**Status.** **Illustrative / manual** — useful as a reference for **`python.Executable`** wiring; **not** validated as a turnkey submodule without user-supplied venv.
+
+**Next steps.** Align **GraalVM artifact versions** with the rest of the repo or mark explicitly as legacy; document **exact steps** to create the venv (`graalpy -m venv`, `pip install docling`, etc.); optionally point `main` at **`step3-docling-library/python-resources`** after a successful plugin build for an integrated story.
 
 ---
 
